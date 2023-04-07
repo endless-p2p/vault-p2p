@@ -1,7 +1,8 @@
 import * as React from 'react'
+import Button from '@mui/joy/Button'
 
 function PingPong(): JSX.Element {
-  const [result, setResult] = React.useState('Play')
+  const [result, setResult] = React.useState('Play ping pong')
 
   const handleClick = async () => {
     const foo = await window.api.ping()
@@ -10,7 +11,7 @@ function PingPong(): JSX.Element {
 
   return (
     <>
-      <button onClick={handleClick}>{result}</button>
+      <Button onClick={handleClick}>{result}</Button>
     </>
   )
 }
