@@ -1328,7 +1328,23 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@mui/joy@npm:^5.0.0-alpha.74":
+"@mui/icons-material@npm:^5.11.16":
+  version: 5.11.16
+  resolution: "@mui/icons-material@npm:5.11.16"
+  dependencies:
+    "@babel/runtime": ^7.21.0
+  peerDependencies:
+    "@mui/material": ^5.0.0
+    "@types/react": ^17.0.0 || ^18.0.0
+    react: ^17.0.0 || ^18.0.0
+  peerDependenciesMeta:
+    "@types/react":
+      optional: true
+  checksum: db70426b6ede049307b951fc622c6ab3b156a24589242bebbc7effd4b0df2d3c7aca93796ed8dfdf20776248778a798724c7a112f8f687c3b4a1ae813f98fb17
+  languageName: node
+  linkType: hard
+
+"@mui/joy@npm:^5.0.0-alpha.74, @mui/material@npm:@mui/joy@latest":
   version: 5.0.0-alpha.74
   resolution: "@mui/joy@npm:5.0.0-alpha.74"
   dependencies:
@@ -3491,6 +3507,16 @@ __metadata:
   bin:
     electron-vite: bin/electron-vite.js
   checksum: 2b2a13ce1939b78270a44795d16f5d658de9757365bed0098f14256b917ba94eaf5089d926cfbe5df1163e614ec75106d2a9ab058c3ab8fd1cd3a032310b2755
+  languageName: node
+  linkType: hard
+
+"electron-window-state@npm:^5.0.3":
+  version: 5.0.3
+  resolution: "electron-window-state@npm:5.0.3"
+  dependencies:
+    jsonfile: ^4.0.0
+    mkdirp: ^0.5.1
+  checksum: 955868c1db598cfb5111612c9df93f61b8999b339fb56cb37ba884a9141478feaef9e9b4d9e777079cdad80fb0bb64b61ae706c85f1f91ba5904f8596d30d7e9
   languageName: node
   linkType: hard
 
@@ -6103,7 +6129,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"minimist@npm:^1.2.0, minimist@npm:^1.2.7":
+"minimist@npm:^1.2.0, minimist@npm:^1.2.6, minimist@npm:^1.2.7":
   version: 1.2.8
   resolution: "minimist@npm:1.2.8"
   checksum: 75a6d645fb122dad29c06a7597bddea977258957ed88d7a6df59b5cd3fe4a527e253e9bbf2e783e4b73657f9098b96a5fe96ab8a113655d4109108577ecf85b0
@@ -6184,6 +6210,17 @@ __metadata:
     minipass: ^3.0.0
     yallist: ^4.0.0
   checksum: f1fdeac0b07cf8f30fcf12f4b586795b97be856edea22b5e9072707be51fc95d41487faec3f265b42973a304fe3a64acd91a44a3826a963e37b37bafde0212c3
+  languageName: node
+  linkType: hard
+
+"mkdirp@npm:^0.5.1":
+  version: 0.5.6
+  resolution: "mkdirp@npm:0.5.6"
+  dependencies:
+    minimist: ^1.2.6
+  bin:
+    mkdirp: bin/cmd.js
+  checksum: 0c91b721bb12c3f9af4b77ebf73604baf350e64d80df91754dc509491ae93bf238581e59c7188360cec7cb62fc4100959245a42cfe01834efedc5e9d068376c2
   languageName: node
   linkType: hard
 
@@ -8236,7 +8273,9 @@ __metadata:
     "@emotion/styled": ^11.10.6
     "@fontsource/public-sans": ^4.5.12
     "@hyperswarm/testnet": ^3.1.1
+    "@mui/icons-material": ^5.11.16
     "@mui/joy": ^5.0.0-alpha.74
+    "@mui/material": "npm:@mui/joy@latest"
     "@types/node": 16.18.21
     "@types/react": 18.0.30
     "@types/react-dom": 18.0.11
@@ -8252,6 +8291,7 @@ __metadata:
     electron: ^22.3.4
     electron-builder: ^23.6.0
     electron-vite: ^1.0.21
+    electron-window-state: ^5.0.3
     eslint: ^8.36.0
     eslint-config-prettier: ^8.8.0
     eslint-plugin-prettier: ^4.2.1
