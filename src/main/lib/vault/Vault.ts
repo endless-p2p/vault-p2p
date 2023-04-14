@@ -71,7 +71,7 @@ class Vault {
     this.autobase = new Autobase({
       inputs: [this.entryBee1.core],
       localInput: this.entryBee1.core,
-      localOutput: this.entryBee.core,
+      outputs: [this.entryBee.core],
     })
 
     this.autobee = new Autobee(this.autobase)
