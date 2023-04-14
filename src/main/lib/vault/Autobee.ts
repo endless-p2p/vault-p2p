@@ -10,7 +10,7 @@ interface Options {
  */
 class Autobee {
   autobase: Autobase
-  opts: Options
+  opts?: Options
   bee: Hyperbee
 
   constructor(autobase: Autobase, opts?: Options) {

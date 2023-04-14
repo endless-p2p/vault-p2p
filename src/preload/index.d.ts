@@ -1,7 +1,8 @@
 import { ElectronAPI } from '@electron-toolkit/preload'
 
 interface MainAPI {
-  ping: () => Promise<string>
+  getState: () => Promise<Record<string, string>>
+  create: (collection: string, document: Record<string, unknown>) => Promise<Record<string, string>>
 }
 
 declare global {

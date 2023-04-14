@@ -4,13 +4,11 @@ import Autobase from 'autobase'
 import Hypercore from 'hypercore'
 import Hyperbee from 'hyperbee'
 import b4a from 'b4a'
-// import { createHash, Hash } from 'crypto'
+import { createHash } from 'crypto'
 import Peer from './Peer'
 import { until } from './util/delay'
 import Autobee from './Autobee'
 import { DB } from '../pear-db'
-import { BeeNode } from './types'
-// import 'crypto'
 
 interface Props {
   name: string
@@ -22,43 +20,40 @@ interface Props {
 class Vault {
   public name: string
 
-  readonly corestore: Corestore
-  readonly beeEncoding: any
-  readonly identityBee: Hyperbee
-  readonly entryBee: Hyperbee
-  readonly autobase: Autobase
-  readonly autobee: Autobee
-  readonly db: DB
-  readonly entries
-
+  readonly beeEncoding: Record<string, string>
   readonly _topic: string
   readonly _topicHex: string
   readonly _topicBuffer: Uint8Array | Buffer
-  readonly _peers: any[]
-  readonly _swarm: Hyperswarm
+  readonly _peers: Peer[]
 
-  private _stats: Record<string, unknown>
-  private _log: string[]
+  storage: string | (() => unknown)
+  corestore: Corestore
+  identityBee: Hyperbee
+  entryBee: Hyperbee
+  autobase: Autobase
+  autobee?: Autobee
+  db: DB
+
+  _swarm: Hyperswarm
   private _identityReady = false
 
-  constructor({ name, storage, topic, bootstrap }: Props) {
+  constructor({ name, storage, topic }: Props) {
     this.name = name
 
     this._topic = topic
-    // this._topicHex = createHash('sha256').update(this._topic).digest('hex')
-    this._topicHex = 'asdf'
+    this._topicHex = createHash('sha256').update(this._topic).digest('hex')
     this._topicBuffer = b4a.from(this._topicHex, 'hex')
 
-    this._stats = {}
-    this._log = []
     this._peers = []
+    this.beeEncoding = { keyEncoding: 'utf-8', valueEncoding: 'utf-8' }
+    this.storage = storage
+  }
 
-    // TODO: Move all this object init and peer handshake into its own class
-    this.corestore = new Corestore(storage)
-    this._swarm = new Hyperswarm({ bootstrap })
+  async initialize() {
+    this.corestore = new Corestore(this.storage)
+    this._swarm = new Hyperswarm()
     this._swarm.on('connection', (connection) => new Peer({ connection, vault: this }))
 
-    this.beeEncoding = { keyEncoding: 'utf-8', valueEncoding: 'utf-8' }
     this.identityBee = new Hyperbee(
       this.corestore.get({ name: 'identity-core'.concat(this.name) }),
       this.beeEncoding,
@@ -71,30 +66,24 @@ class Vault {
     this.autobase = new Autobase({
       inputs: [this.entryBee.core],
       localInput: this.entryBee.core,
-    } as any)
+    })
 
     this.autobee = new Autobee(this.autobase)
     this.db = new DB(this.autobee)
-    this.entries = this.db.collection('entries')
 
     this.identityBee.core.ready().then(() => {
       this.addCoreToSwarm(this.identityBee.core)
-
-      this.identityBee.core.on('append', () => {
-        this._handleAppend(this.identityBee, this.entryBee, true)
-      })
     })
 
     this.entryBee.core.ready().then(() => {
       this.addCoreToSwarm(this.entryBee.core)
 
       this.entryBee.core.update().then(() => {
-        // console.log('local _entryBee.core.update()')
+        console.log('local _entryBee.core.update()')
       })
 
       this.entryBee.core.on('append', () => {
-        // console.log('local _entryBee appended')
-        this._handleAppend(this.identityBee, this.entryBee, true)
+        console.log('local _entryBee appended')
       })
 
       const discoveryKey = b4a.toString(this.entryBee.core.key, 'hex')
@@ -104,23 +93,19 @@ class Vault {
     })
   }
 
-  async initialize({ setStats }) {
-    // this._setStats = setStats
-  }
-
   async ready() {
     const foundPeers = this.corestore.findingPeers()
     this._swarm.join(this._topicBuffer)
     this._swarm.flush().then(() => foundPeers())
-
-    // console.log({ firstBootstrap: this._swarm.dht.bootstrapNodes[0] })
 
     const cores = [...this.corestore.cores.values()]
     const coresReady = cores.map((core) => core.ready)
 
     await until(() => this._identityReady)
 
-    return Promise.all([this.ready, ...coresReady])
+    await Promise.all([this.ready, ...coresReady])
+
+    console.log('Vault ready')
   }
 
   addPeer(peer: Peer) {
@@ -149,32 +134,38 @@ class Vault {
     this._swarm.join(core.discoveryKey)
   }
 
-  onPeerAppend(peer: Peer) {
-    this._handleAppend(peer.identityBee, peer.entryBee)
+  async create(collection: string, doc) {
+    const db = await this.db.collection(collection)
+
+    return db.insert(doc)
   }
 
-  put(key: string, value: string) {
-    return this.entries.insert({ key, value })
+  async findAll(collection: string) {
+    const db = await this.db.collection(collection)
+    const cursor = db.find()
+    const docs = await cursor
+
+    return docs.map((doc) => ({ ...doc, id: doc._id.toString() }))
   }
 
-  async get(key: string) {
-    let doc: BeeNode
-    try {
-      doc = await this.entries.findOne({ key })
-    } catch (error) {
-      // TODO: Think about pear-db design.  Do we really want it to throw every time it doesn't find anything?
-      // console.log(error)
-      return { seq: -1 } as BeeNode
+  async getState() {
+    const notes = await this.db.collection('notes').find()
+    const state = {
+      notes,
+      identityBee: await this._beeToKeyValue(this.identityBee),
+      name: this.name,
+      topic: this._topic,
+      topicHex: this._topicHex,
+      peerCount: this._peers.length,
+      peerNames: this._peers.map((peer) => peer.name),
+      identityReady: this._identityReady,
     }
-    return doc
+
+    return state
   }
 
   shutdown() {
     return this._swarm.destroy()
-  }
-
-  private async _handleAppend(identityBee, entryBee, local = false) {
-    //
   }
 
   private async _beeToKeyValue(bee: Hyperbee) {

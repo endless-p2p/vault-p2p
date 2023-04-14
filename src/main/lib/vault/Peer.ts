@@ -1,20 +1,21 @@
 import Hyperbee from 'hyperbee'
-import b4a from 'b4a'
 import Vault from './Vault'
 
 class Peer {
+  name: string
   readonly _connection
 
   private _vault: Vault
   private _identityBee: Hyperbee
   private _entryBee: Hyperbee
-  private _entryCoreDiscoveryKey: string
+  private _entryCoreDiscoveryKey?: string
 
   constructor({ vault, connection }) {
+    this.name = 'unknown'
     this._vault = vault
     this._connection = connection
 
-    if (!this._authorize()) return null
+    if (!this._authorize()) return
 
     // console.log('* new connection from:', b4a.toString(connection.remotePublicKey, 'hex'), '*')
 
@@ -60,12 +61,6 @@ class Peer {
     })
 
     this._identityBee.core.on('append', () => {
-      //console.log('got identityCore append 1')
-      this._vault.onPeerAppend(this)
-    })
-
-    this._identityBee.core.on('append', () => {
-      //console.log('got identityCore append 2')
       this._onIdentityCoreAppend()
     })
     this._onIdentityCoreAppend()
@@ -75,11 +70,12 @@ class Peer {
     if (this._entryCoreDiscoveryKey) return
 
     const entryCoreDiscoveryKey = await this._identityBee.get('entryCoreDiscoveryKey')
-    this._vault.onPeerAppend(this)
+    const name = await this._identityBee.get('name')
+    this.name = name.value
 
     if (!entryCoreDiscoveryKey) return
 
-    this._entryCoreDiscoveryKey = entryCoreDiscoveryKey.value
+    this._entryCoreDiscoveryKey = entryCoreDiscoveryKey.value as string
 
     const core = await this._vault.initializeCoreFromKey(this._entryCoreDiscoveryKey)
     this._entryBee = new Hyperbee(core, {
@@ -88,14 +84,8 @@ class Peer {
     })
 
     await this._vault.autobase.addInput(this._entryBee.core)
-    //console.log('added autobase input')
-
-    this._entryBee.core.on('append', () => {
-      this._vault.onPeerAppend(this)
-    })
 
     await this._entryBee.core.ready()
-    this._vault.onPeerAppend(this)
   }
 
   private _authorize() {

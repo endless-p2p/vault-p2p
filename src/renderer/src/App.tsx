@@ -1,41 +1,84 @@
 import '@fontsource/public-sans'
-import { CssVarsProvider } from '@mui/joy/styles'
-import CssBaseline from '@mui/joy/CssBaseline'
-import Sheet from '@mui/joy/Sheet'
+import Box from '@mui/joy/Box'
+import Breadcrumbs from '@mui/joy/Breadcrumbs'
+import Link from '@mui/joy/Link'
 import Typography from '@mui/joy/Typography'
-import Versions from './components/Versions'
-import PingPong from './components/PingPong'
-import NoteForm from './components/NoteForm'
-import ModeToggle from './components/ModeToggle'
+import FirstSidebar from './components/FirstSidebar'
+import SecondSidebar from './components/SecondSidebar'
+import Header from './components/Header'
+import ColorSchemeToggle from './components/ColorSchemeToggle'
+import { ChevronRight, HomeOutlined } from '@mui/icons-material'
+import SecureNotes from './screens/SecureNotes/SecureNotesScreen'
+import { useVault } from './hooks/useVault'
 
 function App() {
-  const sheetStyle = {
-    width: 300,
-    mx: 'auto', // margin left & right
-    my: 4, // margin top & bottom
-    py: 3, // padding top & bottom
-    px: 2, // padding left & right
-    display: 'flex',
-    flexDirection: 'column',
-    gap: 2,
-    borderRadius: 'sm',
-    boxShadow: 'md',
-  }
-
+  const { vaultState } = useVault()
   return (
-    <CssVarsProvider defaultMode="dark">
-      <CssBaseline />
-      <Typography level="h3" component="h1" sx={{ textAlign: 'center', mt: 4 }}>
-        vault-p2p
-      </Typography>
-      <Sheet variant="outlined" sx={sheetStyle}>
-        <Versions />
-        <PingPong />
-        <NoteForm />
-        <ModeToggle />
-      </Sheet>
-    </CssVarsProvider>
+    <Box sx={{ display: 'flex', minHeight: '100dvh' }}>
+      <Header />
+      <FirstSidebar />
+      <SecondSidebar />
+      <Box component="main" className="MainContent" sx={mainContentStyles}>
+        <Box sx={{ display: 'flex', alignItems: 'center' }}>
+          <Breadcrumbs
+            size="sm"
+            aria-label="breadcrumbs"
+            separator={<ChevronRight />}
+            sx={breadcrumbStyles}
+          >
+            <Link
+              underline="none"
+              color="neutral"
+              fontSize="inherit"
+              href="#some-link"
+              aria-label="Home"
+            >
+              <HomeOutlined />
+            </Link>
+            <Link underline="hover" color="neutral" fontSize="inherit" href="#some-link">
+              {vaultState.name}
+            </Link>
+            <Typography fontSize="inherit" variant="soft" color="primary">
+              Secure Notes
+            </Typography>
+          </Breadcrumbs>
+          <ColorSchemeToggle sx={{ ml: 'auto', display: { xs: 'none', md: 'inline-flex' } }} />
+        </Box>
+        <SecureNotes />
+      </Box>
+    </Box>
   )
 }
 
 export default App
+
+const mainContentStyles = (theme) => ({
+  px: {
+    xs: 2,
+    md: 6,
+  },
+  pt: {
+    xs: `calc(${theme.spacing(2)} + var(--Header-height))`,
+    sm: `calc(${theme.spacing(2)} + var(--Header-height))`,
+    md: 3,
+  },
+  pb: {
+    xs: 2,
+    sm: 2,
+    md: 3,
+  },
+  flex: 1,
+  display: 'flex',
+  flexDirection: 'column',
+  minWidth: 0,
+  height: '100dvh',
+  gap: 1,
+})
+
+const breadcrumbStyles = {
+  '--Breadcrumbs-gap': '1rem',
+  '--Icon-fontSize': '16px',
+  fontWeight: 'lg',
+  color: 'neutral.400',
+  px: 0,
+}
