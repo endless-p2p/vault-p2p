@@ -30,6 +30,7 @@ class Vault {
   corestore: Corestore
   identityBee: Hyperbee
   entryBee: Hyperbee
+  entryBee1: Hyperbee
   autobase: Autobase
   autobee?: Autobee
   db: DB
@@ -62,10 +63,15 @@ class Vault {
       this.corestore.get({ name: 'entry-core'.concat(this.name) }),
       this.beeEncoding,
     )
+    this.entryBee1 = new Hyperbee(
+      this.corestore.get({ name: 'entry-core1'.concat(this.name) }),
+      this.beeEncoding,
+    )
 
     this.autobase = new Autobase({
-      inputs: [this.entryBee.core],
-      localInput: this.entryBee.core,
+      inputs: [this.entryBee1.core],
+      localInput: this.entryBee1.core,
+      localOutput: this.entryBee.core,
     })
 
     this.autobee = new Autobee(this.autobase)
